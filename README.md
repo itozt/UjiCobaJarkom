@@ -832,7 +832,7 @@ Pastikan juga untuk melakukan proses instalasi dan setup terlebih dahulu. <br>
 
 	htop
 ```
-
+**Client :** <br>
    ```
    ab -n 1000 -c 100 http://www.gryffindor.hogwarts.d31.com/index.php
    ```
@@ -867,7 +867,7 @@ Load balancer yang menangani para PHP worker di Gryffindor telah dikonfigurasi d
 ![NOMOR 8-3](https://github.com/user-attachments/assets/35d692a8-f283-474d-a4cb-dcd43e36425f)
 
 - Configuration<br>
-  Jalankan di Load Balancer :
+**Load Balancer :** <br>
 ```
   cp /etc/nginx/sites-available/default /etc/nginx/sites-available/libray_php
 
@@ -928,7 +928,7 @@ upstream backend {
 ' >/etc/nginx/sites-available/libray_php
 ```
 Inilah konfigurasi untuk melakukan monitoring menggunakan JMeter, yang nantinya diunduh dalam bentuk UI website. Pastikan menyesuaikan format file output yang dihasilkan.<br>
-Jalankan di Client
+**Client** : <br>
 ```
 echo 'nameserver 192.168.122.1 ' > /etc/resolv.conf
 apt-get update
@@ -966,7 +966,7 @@ Dalam penilaian akhir tahun ini, konfigurasi load balancer Nginx disusun untuk m
 
 - Configuration<br>
 Konfigurasi untuk memberikan akses kepada user agar mereka login terlebih dahulu  ke server sehingga dapat mengakses website.<br>
-Jalankan di PHP Worker<br> 
+**PHP Worker** : <br> 
 ```
 nano /etc/nginx/sites-available/default
 location / {
@@ -976,7 +976,7 @@ location / {
 
 service nginx restart
 ```
-Jalankan di Load Balancer<br>
+**Load Balancer : ** <br>
 ```
 mkdir -p /etc/nginx/secretchamber
 htpasswd -c /etc/nginx/secretchamber/htpasswd jarkom
@@ -987,7 +987,7 @@ nginx -t
 
 service nginx restart
 ```
-Jalankan di Client
+**Client** : <br>
 ```
 # lynx ke salah satu PHP worker
 lynx gryffindor.hogwarts.d31.com
@@ -1002,21 +1002,67 @@ Untuk membatasi akses ke Gryffindor melalui Voldemort, konfigurasi ini menerapka
 
 > Setelah menambahkan autentikasi ke Gryffindor, coba testing ulang dengan menggunakan JMeter (algoritma round robin) serta skenario, thread, dan ramp up period yang sama seperti no 8 (300 thread, 3 sec ramp up period, login-home-logout). Kali ini, coba juga jumlah worker yang berbeda: 3 worker, 2 worker, dan 1 worker. 
 
-> _After adding authentication to Gryffindor, retest using JMeter (round-robin algorithm) with the same scenario, thread, and ramp up period as number 8 (300 thread, 3 sec ramp up period, login-home-logout). This time, test with different numbers of workers: 3 workers, 2 workers, and 1 worker._
-
 **Answer:**
 
 - Screenshot
+1 Worker
+![NOMOR 10-3](https://github.com/user-attachments/assets/d7b1ccf7-d100-4ee6-9654-018726dab663)
+![NOMOR 10-4](https://github.com/user-attachments/assets/1380a32c-0085-41cd-9b9c-bd47ac9cb57a)<br>
+2 Worker
+![NOMOR 10-1](https://github.com/user-attachments/assets/0fd88ac4-a300-4a43-9fe4-8a44054db78e)
+![NOMOR 10-6](https://github.com/user-attachments/assets/c2ce30c8-ac39-450b-a453-edacbb4d1fa2)
+3 Worker
+![NOMOR 10-2](https://github.com/user-attachments/assets/98cc4ae2-d2c6-4923-ac62-9861a70d1510)
+![NOMOR 10-5](https://github.com/user-attachments/assets/8bdb3630-bf6e-4d5f-b8d3-38cc5230e2b3)
 
-  `Put your screenshot in here`
 
-- Configuration
+- Configuration <br>
+Selalu pastikan untuk mengonfigurasi instalasi terlebih dahulu. Ini adalah implementasi algoritma Round Robin dengan jumlah worker yang berbeda. Pastikan untuk menyesuaikan jumlah worker yang ingin diaktifkan sesuai dengan kebutuhan yang diinginkan.<br>
+**Load Balancer :** <br>
+```
+  echo '
+	upstream backend {
+	    # Round Robin
+	    server 10.130.1.1;
+	    server 10.130.1.2;
+	    server 10.130.1.3;
+	}
+	upstream backend  {
+    	   # Round Robin
+           server 10.130.1.1;
+        server 10.130.1.2;
+        }
+        upstream backend  {
+           # Round Robin
+           server 10.130.1.1;
+        }' >/etc/nginx/sites-available/libray_php
 
-  `Put your configuration in here`
+   service nginx restart
+```
+**Client :** <br>
+```
+ab -n 300 -c 100 http://www.gryffindor.hogwarts.a05.com/index.php
+```
+Seperti nomor 8 
+```
+echo 'nameserver 192.168.122.1 ' > /etc/resolv.conf
+apt-get update
+java -version
+apt-get install openjdk-11-jre
+wget https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.6.3.zip
+unzip apache-jmeter-5.6.3.zip
+cd apache-jmeter-5.6.3/bin
+nano test1.jmx
 
-- Explanation
+mkdir ../../TEST-1JMX
+./jmeter -n -t Test-1.jmx -l Test-1.jmx.csv -e -o ../../TEST-1JMX
 
-  `Put your explanation in here`
+
+echo 'nameserver 8.8.8.8 ' > /etc/resolv.conf
+curl -X POST -F "file=@./nomor8.zip" https://webhook.site/857529be-99b6-4296-803a-3358f513e529
+```
+- Explanation<br>
+Setelah menambahkan autentikasi, pengujian ulang dilakukan menggunakan algoritma round-robin di JMeter dengan skenario dan konfigurasi yang sama (300 thread, ramp-up 3 detik, serta alur login-home-logout). Pengujian dilakukan dengan berbagai jumlah worker: 3, 2, dan 1 worker, untuk mengevaluasi kinerja masing-masing konfigurasi worker dalam menghadapi autentikasi dan beban sistem. Konfigurasi load balancer diperbarui dalam file Nginx untuk setiap pengujian sesuai dengan jumlah worker yang aktif, dan hasil dari JMeter mencatat waktu respons serta kinerja secara keseluruhan pada setiap pengujian.
 
 <br>
 
@@ -1024,22 +1070,51 @@ Untuk membatasi akses ke Gryffindor melalui Voldemort, konfigurasi ini menerapka
 
 > Hogwarts juga bekerjasama dengan ITS dalam perlombaan ini. Untuk itu, setiap request pada Voldemort yang mengandung /informatika pada akhir url akan di proxy passing menuju halaman https://www.its.ac.id/informatika/id/beranda/ 
 
-> _Hogwarts has also partnered with ITS for this competition. Any request to Voldemort containing /informatika at the end of the URL should be proxied to the page at https://www.its.ac.id/informatika/id/beranda/._
-
-
 **Answer:**
 
 - Screenshot
-
-  `Put your screenshot in here`
+![NOMOR 11](https://github.com/user-attachments/assets/964a81a8-5d02-4d0e-addb-89397ee7917a)
 
 - Configuration
+**Load Balancer :** <br>
+```
+echo ' 
+upstream backend {
+    server 10.130.1.1;
+    server 10.130.1.2;
+    server 10.130.1.3;
+}
 
-  `Put your configuration in here`
+server {
+    listen 80;
+    server_name gryffindor.hogwarts.d31.com;
+
+    location ~ /informatika {
+        rewrite ^/informatika(.*)$ /informatika/id/beranda$1 break;
+        proxy_pass https://www.its.ac.id;
+        proxy_set_header Host www.its.ac.id;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    auth_basic "Restricted Content";
+    auth_basic_user_file /etc/nginx/secretchamber/htpasswd;
+
+    error_log /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+}' >/etc/nginx/sites-available/libray_php
+
+service nginx restart
+nginx -t
+```
+**Client :** <br>
+```
+lynx gryffindor.hogwarts.d31.com/informatika
+```
 
 - Explanation
-
-  `Put your explanation in here`
+Kolaborasi antara Hogwarts dan ITS memungkinkan setiap permintaan yang diarahkan ke Voldemort dengan akhiran /informatika untuk segera diarahkan ke halaman ITS melalui URL https://www.its.ac.id/informatika/id/beranda/. Dalam konfigurasi ini, Nginx memanfaatkan proxy pass untuk meneruskan permintaan tersebut ke server ITS. Selain itu, header HTTP seperti Host, X-Real-IP, dan X-Forwarded-For juga disertakan untuk memastikan bahwa permintaan tetap teridentifikasi dengan akurat di server tujuan.
 
 <br>
 
