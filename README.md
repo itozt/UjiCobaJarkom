@@ -1041,7 +1041,7 @@ Selalu pastikan untuk mengonfigurasi instalasi terlebih dahulu. Ini adalah imple
 ```
 **Client :** <br>
 ```
-ab -n 300 -c 100 http://www.gryffindor.hogwarts.a05.com/index.php
+ab -n 300 -c 100 http://www.gryffindor.hogwarts.d31.com/index.php
 ```
 Seperti nomor 8 
 ```
