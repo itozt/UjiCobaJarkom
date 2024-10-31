@@ -387,8 +387,28 @@ Sebelum memulai, praktikan memberikan command berikut ke setiap node :
   ```
 
 - Explanation
-
-  `Put your explanation in here`
+  1. `mkdir -p /etc/bind/hogwarts`<br>
+      Membuat direktori /etc/bind/hogwarts untuk menyimpan file konfigurasi zona DNS yang spesifik untuk domain hogwarts.d31.com dan subdomainnya.<br>
+  2. `echo '...' > /etc/bind/named.conf.local`<br>
+      Menulis konfigurasi zona untuk DNS server ke dalam file /etc/bind/named.conf.local<br>
+      a. `zone "hogwarts.d31.com" { ... }`<br>
+         Mendefinisikan zona DNS untuk hogwarts.d31.com sebagai zona utama (type master), dan file zona tersimpan di /etc/bind/hogwarts/hogwarts.d31.com.<br>
+      b. `zone "ravenclaw.hogwarts.d31.com" { .. }`<br>
+         Mendefinisikan zona utama untuk subdomain ravenclaw.hogwarts.d31.com.<br>
+      c. `zone "gryffindor.hogwarts.d31.com" { ... }`<br>
+         Mendefinisikan zona utama untuk subdomain gryffindor.hogwarts.d31.com.<br>
+      d. `zone "1.130.10.in-addr.arpa" { .. }`<br>
+      Mendefinisikan zona balik untuk IP pada subnet 10.130.1.0 untuk resolusi reverse DNS.<br>
+   3. `cp /etc/bind/db.local /etc/bind/hogwarts/...`<br>
+      Menyalin file template /etc/bind/db.local ke dalam direktori /etc/bind/Hogwarts sebagai dasar untuk membuat file zona spesifik.<br>
+   4. `echo '...' > /etc/bind/hogwarts/hogwarts.d31.com`<br>
+      Menambahkan data ke dalam file zona /etc/bind/hogwarts/hogwarts.d31.com<br>
+   5. `echo '...' > /etc/bind/hogwarts/ravenclaw.hogwarts.d31.com`<br>
+      Menambahkan data ke dalam file zona /etc/bind/hogwarts/ravenclaw.hogwarts.d31.com<br>
+   6. `echo '...' > /etc/bind/hogwarts/gryffindor.hogwarts.d31.com`<br>
+      Menambahkan data ke dalam file zona /etc/bind/hogwarts/gryffindor.hogwarts.d31.com<br>
+   7. `service bind9 start`<br>
+      DNS server menjalankan permintaan sesuai konfigurasi zona yang telah ditambahkan.<br>
 
 <br>
 
@@ -665,8 +685,14 @@ Hasil dari SusanBones menunjukkan IP 10.130.5.51<br>
    - Cek IP HermioneGranger dan ChoChang dengan `ip a`
 
 - Explanation
-
-  `Put your explanation in here`
+  1. Konfigurasi untuk host HermioneGranger :
+   - `hardware ethernet 9a:88:76:e5:4f:0b;` menentukan hwaddress perangkat HermioneGranger.
+   - `fixed-address 10.130.1.14;` menetapkan alamat IP statis `10.130.1.14` untuk HermioneGranger.
+   - Artinya, setiap kali perangkat dengan hwaddress `9a:88:76:e5:4f:0b` terhubung ke jaringan, DHCP Server akan memberikan alamat IP `10.130.1.14` kepada perangkat tersebut.
+  2. Konfigurasi untuk host ChoChang :
+   - `hardware ethernet f6:57:38:0d:f3:8f;` menentukan hwaddress perangkat yang bernama ChoChang.
+   - `fixed-address 10.130.6.14;` menetapkan alamat IP statis `10.130.6.14` untuk perangkat ini.
+   - Artinya, setiap kali perangkat dengan hwaddress `f6:57:38:0d:f3:8f` terhubung ke jaringan, DHCP Server akan memberikan alamat IP `10.130.6.14` kepada perangkat tersebut.
 
 <br>
 
@@ -677,41 +703,32 @@ Hasil dari SusanBones menunjukkan IP 10.130.5.51<br>
 **Answer:**
 
 - Screenshot<br>
-
-  ![image12](https://github.com/user-attachments/assets/80c57b71-7146-460d-987d-30660c4d8d6e)
-
+  **Di 3 PHP Worker**
+  ![NOMOR 6 (1)](https://github.com/user-attachments/assets/b27bf391-e42c-4451-bfdf-c23d9b8a81d6)
+  ![NOMOR 6 (2)](https://github.com/user-attachments/assets/42880e9e-123c-46f9-8cee-986601e3bf4a)
+  ![NOMOR 6 (3)](https://github.com/user-attachments/assets/b03cd5c0-4c83-4a93-a001-7dd334b66cd7)
 
 - Configuration
 > Jalankan konfigurasi berikut di setiap PHP worker
   ```
-   echo '
-   nameserver 192.168.122.1
-   nameserver 10.130.3.2
-   ' > /etc/resolv.conf
+   
+service nginx start
+service php7.4-fpm start
 
-   # Check dan start services
-   service nginx status
-   service php7.2-fpm status
-   service nginx start
-   service php7.2-fpm start
+wget -O '/var/www/gryffindor.zip' 'https://drive.google.com/uc?export=download&id=17R4Zcxm3emHq21WdMJzSfCxO8FHqvATM'
+unzip -o /var/www/gryffindor.zip -d /var/www/gryffindor.hogwarts.d31.com
+rm /var/www/gryffindor.zip
 
-  # Download and unzip website
-   wget -O '/var/www/gryffindor.zip' 'https://drive.google.com/uc?export=download&id=17R4Zcxm3emHq21WdMJzSfCxO8FHqvATM'
-   unzip -o /var/www/gryffindor.zip -d /var/www/gryffindor.hogwarts.d31.com
-   rm /var/www/gryffindor.zip
+chown -R www-data:www-data /var/www/gryffindor.hogwarts.d31.com
+chmod -R 755 /var/www/gryffindor.hogwarts.d31.com
 
-   chown -R www-data:www-data /var/www/gryffindor.hogwarts.d31.com
-   chmod -R 755 /var/www/gryffindor.hogwarts.d31.com
+cp /etc/nginx/sites-available/default /etc/nginx/sites-available/gryffindor.hogwarts.d31.com
+ln -s /etc/nginx/sites-available/gryffindor.hogwarts.d31.com /etc/nginx/sites-enabled/gryffindor.hogwarts.d31.com
+rm /etc/nginx/sites-enabled/default
 
-  # set up nginx
-   cp /etc/nginx/sites-available/default /etc/nginx/sites-available/gryffindor.hogwarts.d31.com
-   ln -s /etc/nginx/sites-available/gryffindor.hogwarts.d31.com /etc/nginx/sites-enabled/gryffindor.hogwarts.d31.com
-   rm /etc/nginx/sites-enabled/default
 
-  # Nginx konfigurasi untuk gryffindor.hogwarts.d31.com
-
-  echo '
-  server {
+echo '
+server {
     listen 80;
     root /var/www/gryffindor.hogwarts.d31.com;
     index index.php index.html index.htm;
@@ -724,36 +741,42 @@ Hasil dari SusanBones menunjukkan IP 10.130.5.51<br>
     # pass PHP scripts to FastCGI server
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
     }
 
     location ~ /\.ht {
         deny all;
     }
 
-     error_log /var/log/nginx/jarkom_error.log;
-     access_log /var/log/nginx/jarkom_access.log;
-   }' > /etc/nginx/sites-available/gryffindor.hogwarts.d31.com
-
-    
-   echo '
-   127.0.0.1 gryffindor.hogwarts.d31.com
-   127.0.0.1 www.gryffindor.hogwarts.d31.com
-   127.0.0.1 localhost
-   ' > /etc/hosts
+    error_log /var/log/nginx/jarkom_error.log;
+    access_log /var/log/nginx/jarkom_access.log;
+}' > /etc/nginx/sites-available/gryffindor.hogwarts.d31.com
 
 
-   service nginx restart
-   service php7.2-fpm restart
 
-   lynx localhost
-   lynx gryffindor.hogwarts.d31.com
-   lynx www.gryffindor.hogwarts.d31.com
+echo '
+127.0.0.1 gryffindor.hogwarts.d31.com
+127.0.0.1 www.gryffindor.hogwarts.d31.com
+# 127.0.1.1 HarryPotter
+# 127.0.0.1 localhost
+# ::1     localhost ip6-localhost ip6-loopback
+# fe00::0 ip6-localnet
+# ff00::0 ip6-mcastprefix
+# ff02::1 ip6-allnodes
+# ff02::2 ip6-allrouters
+
+# hostname 
+# HarryPotter
+' > /etc/hosts
+
+service nginx restart
+service php7.4-fpm restart
+
   ```
 
 - Explanation
 
-  `Put your explanation in here`
+Worker PHP di Gryffindor melakukan proses pengunduhan dan ekstraksi website ke direktori server, kemudian mengatur izin akses yang diperlukan. Setelah itu, mereka menyesuaikan konfigurasi Nginx untuk mendukung PHP versi 7.4. Tahap selanjutnya adalah melakukan deployment website ke server agar dapat diakses oleh klien. Setelah menambahkan entri domain pada file /etc/hosts, layanan direstart, dan akses website diverifikasi menggunakan lynx.
 
 <br>
 
@@ -761,44 +784,171 @@ Hasil dari SusanBones menunjukkan IP 10.130.5.51<br>
 
 > Khusus perlombaan ini, Voldemort sudah jinak dan dia menjadi load balancer untuk para penghuni asrama Gryffindor yang menjadi worker PHP. Aturlah agar Voldemort dapat membagi pekerjaan kepada worker PHP secara optimal. Sebagai pengetesan awal, terapkan algoritma round robin dan lakukan test index.php menggunakan apache benchmark dengan 1000 request dan 100 request/second. Lakukan test sebanyak 3 kali lalu hitung rata-rata dan standar deviasi dari time/request
 
-> _Voldemort, who is now reformed, becomes the load balancer for the Gryffindor PHP workers. Optimize Voldemort to distribute tasks to the PHP workers. For the initial test, apply the round-robin algorithm and test it to the index.php page using Apache Benchmark with 1,000 requests and 100 requests/second. Do the test 3 times and calculate the mean and standard deviation of time/request._
-
 **Answer:**
 
 - Screenshot
+![NOMOR 7 (1)](https://github.com/user-attachments/assets/180a3efe-1f7d-43be-b693-0f5e4a691329)
+![NOMOR 7 (2)](https://github.com/user-attachments/assets/7bfd3714-a1b9-4c4d-83cb-01031af66dfa)
+![NOMOR 7 (3)](https://github.com/user-attachments/assets/4cad5df9-9bd8-4ced-9009-81de780a4a0c)
+![NOMOR 7 (4)](https://github.com/user-attachments/assets/f7c99036-19b5-4118-8e0f-1d42f6f98674)
+![NOMOR 7 (5)](https://github.com/user-attachments/assets/3865475d-def6-4545-924b-2b75fded9a00)
 
-  `Put your screenshot in here`
+- Configuration <br>
+Konfigurasi ini dirancang agar Voldemort dapat mendistribusikan beban kerja secara optimal kepada worker PHP. Sebagai langkah awal pengujian, implementasikan algoritma round robin dan uji file index.php dengan mengonfigurasi upstream backend dan memasukkan nama server dari ketiga PHP worker. Untuk pengujian, gunakan ab di sisi klien dan htop pada Load Balancer untuk memantau beban kerja.
+Pastikan juga untuk melakukan proses instalasi dan setup terlebih dahulu. <br>
 
-- Configuration
+**Load Balancer :** <br>
+```
+	cp /etc/nginx/sites-available/default /etc/nginx/sites-available/libray_php
 
-  `Put your configuration in here`
+	echo ' 
+	upstream backend {
+	    server 10.130.1.1;
+	    server 10.130.1.2;
+	    server 10.130.1.3;
+	}
+
+	server {
+	    listen 80;
+	    server_name gryffindor.hogwarts.d31.com;
+
+             location / {
+ 	            proxy_pass http://backend;
+ 	            proxy_set_header    X-Real-IP $remote_addr;
+	            proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+	            proxy_set_header    Host $http_host;
+	    }
+
+
+	    error_log /var/log/nginx/error.log;
+	    access_log /var/log/nginx/access.log;
+
+	}' >/etc/nginx/sites-available/libray_php
+
+	ln -s /etc/nginx/sites-available/libray_php /etc/nginx/sites-enabled/libray_php
+	rm /etc/nginx/sites-enabled/default
+
+	service nginx restart
+
+	htop
+```
+
+   ```
+   ab -n 1000 -c 100 http://www.gryffindor.hogwarts.d31.com/index.php
+   ```
 
 - Explanation
-
-  `Put your explanation in here`
-
+1. Hitung mean dengan rumus :
+   ```
+     T1 + T2 + T3 / 3
+     = 3.9 + 5.0 + 8.0 / 3
+     = 31.333333333333332 
+     = 31.33 m/s
+   ```
+2. Hitung nilai standar dengan rumus :
+   ```
+     SD = √ (T1 - Mean)^2 + (T2 - Mean)^2 + (T3 - Mean)^2 / 3
+        = √ (3.9 - 31.333333333333332)^2 + (5.0 - 31.333333333333332)^2 + (8.0 - 31.333333333333332)^2 / 3
+        = √663.5174999999999
+        = 25.75
+    ```
+Load balancer yang menangani para PHP worker di Gryffindor telah dikonfigurasi dengan algoritma round robin, memungkinkan Voldemort membagi setiap permintaan secara merata ke setiap PHP worker. Pengujian awal dilakukan pada halaman index.php menggunakan Apache Benchmark, dengan total 1.000 permintaan pada kecepatan 100 permintaan per detik, dan diuji sebanyak tiga kali. Rata-rata waktu permintaan mencapai 31,33 ms dengan standar deviasi 25,75 ms, menunjukkan bahwa konfigurasi ini mampu mendistribusikan beban secara optimal dan seimbang di seluruh worker.
 <br>
 
 ## Soal 8
 
 > Dalam penilaian akhir tahun ini, dibutuhkan algoritma terbaik, cobalah tes 3 algoritma load balancer dengan menggunakan jmeter. Jmeter perlu melakukan login, akses home, dan terakhir logout. Lakukan test dengan 300 thread dan 3 sec ramp up period. Lakukan test sebanyak 3 kali per algoritma, lalu hitung rata-rata dan standar deviasi dari response time. (username: wingardium, password: leviosa)
 
-
-> _For the final assessment, try three different load-balancing algorithms using JMeter with 300 threads and a 3-second ramp-up period. Jmeter have to be able to login, access homepage, and logout. Do the test 3 times for each algorithm, then calculate the mean and standard deviation of response time. (username: wingardium, password: leviosa)_
-
 **Answer:**
 
 - Screenshot
+![NOMOR 8-1](https://github.com/user-attachments/assets/6f1d1677-6c6d-4fa6-aee9-f8d5ce88e473)
+![NOMOR 8-2](https://github.com/user-attachments/assets/84c653ea-0fb2-4817-97dd-5c7c5ab09148)
+![NOMOR 8-3](https://github.com/user-attachments/assets/35d692a8-f283-474d-a4cb-dcd43e36425f)
 
-  `Put your screenshot in here`
+- Configuration<br>
+  Jalankan di Load Balancer :
+```
+  cp /etc/nginx/sites-available/default /etc/nginx/sites-available/libray_php
 
-- Configuration
+echo ' 
+upstream backend {
+    server 10.130.1.1;
+    server 10.130.1.2;
+    server 10.130.1.3;
+}
 
-  `Put your configuration in here`
+server {
+    listen 80;
+    server_name gryffindor.hogwarts.d31.com;
 
-- Explanation
+    location / {
+            proxy_pass http://backend;
+            proxy_set_header    X-Real-IP $remote_addr;
+            proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header    Host $http_host;
+    }
 
-  `Put your explanation in here`
+
+    error_log /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+
+}' >/etc/nginx/sites-available/libray_php
+
+ln -s /etc/nginx/sites-available/libray_php /etc/nginx/sites-enabled/libray_php
+rm /etc/nginx/sites-enabled/default
+
+service nginx restart
+
+htop
+```
+Algoritma bisa diubah sesuai kondisi yang diinginkan
+```
+echo '
+upstream backend {
+    # Round Robin
+    server 10.130.1.1;
+    server 10.130.1.2;
+    server 10.130.1.3;
+}
+upstream backend {
+    # Least-connection
+    least_conn;
+    server 10.130.1.1;
+    server 10.130.1.2;
+    server 10.130.1.3;
+}
+upstream backend {
+    # ip_hash
+    ip_hash;
+    server 10.130.1.1;
+    server 10.130.1.2;
+    server 10.130.1.3;
+}
+' >/etc/nginx/sites-available/libray_php
+```
+Inilah konfigurasi untuk melakukan monitoring menggunakan JMeter, yang nantinya diunduh dalam bentuk UI website. Pastikan menyesuaikan format file output yang dihasilkan.<br>
+Jalankan di Client
+```
+echo 'nameserver 192.168.122.1 ' > /etc/resolv.conf
+apt-get update
+java -version
+apt-get install openjdk-11-jre
+wget https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.6.3.zip
+unzip apache-jmeter-5.6.3.zip
+cd apache-jmeter-5.6.3/bin
+nano test1.jmx
+
+mkdir ../../TEST-1JMX
+./jmeter -n -t Test-1.jmx -l Test-1.jmx.csv -e -o ../../TEST-1JMX
+
+
+echo 'nameserver 8.8.8.8 ' > /etc/resolv.conf
+curl -X POST -F "file=@./nomor8.zip" https://webhook.site/857529be-99b6-4296-803a-3358f513e529
+```
+
+- Explanation<br>
+Dalam penilaian akhir tahun ini, konfigurasi load balancer Nginx disusun untuk mengimplementasikan tiga algoritma yang berbeda: round-robin, least connections, dan IP hash, dengan tujuan untuk menentukan algoritma mana yang paling efektif dalam menangani permintaan pengguna. Pengujian dilakukan menggunakan JMeter dengan 300 thread dan periode ramp-up selama 3 detik untuk mengakses halaman login, home, dan logout. Setiap algoritma diuji sebanyak tiga kali, dan kemudian rata-rata serta standar deviasi waktu respons dihitung untuk mengevaluasi kinerja masing-masing algoritma.
 
 <br>
 
@@ -806,21 +956,45 @@ Hasil dari SusanBones menunjukkan IP 10.130.5.51<br>
 
 > Tidak semua IP dapat akses asrama Gryffindor melalui IP Load balancer Voldemort. Untuk itu, berikan akses pada load balancer Voldemort. Autentikasi akan memerlukan username: “jarkom” dan password: “modul3”. Simpan file autentikasi pada  /etc/nginx/secretchamber 
 
-> _Not all IPs can access Gryffindor's house through Voldemort’s load balancer. Grant access to the Voldemort load balancer. Authentication will require username: “jarkom” and password: “modul3”. Save the authentication file in /etc/nginx/secretchamber._
-
 **Answer:**
 
 - Screenshot
+![NOMOR 9 (1)](https://github.com/user-attachments/assets/576c80c0-bd9f-46ed-968b-c427cd0551c2)
+![NOMOR 9 (2)](https://github.com/user-attachments/assets/b8aadd8c-3aaf-43c3-8f90-3024c7c38726)
+![NOMOR 9-3](https://github.com/user-attachments/assets/01866e4f-50a1-4145-b076-9762297f0864)
+![NOMOR 9-4](https://github.com/user-attachments/assets/c5f659f6-1006-4248-adfa-be973d66fbd0)
 
-  `Put your screenshot in here`
+- Configuration<br>
+Konfigurasi untuk memberikan akses kepada user agar mereka login terlebih dahulu  ke server sehingga dapat mengakses website.<br>
+Jalankan di PHP Worker<br> 
+```
+nano /etc/nginx/sites-available/default
+location / {
+       auth_basic "Restricted Area";
+       auth_basic_user_file /etc/nginx/secretchamber/htpasswd;
+}
 
-- Configuration
+service nginx restart
+```
+Jalankan di Load Balancer<br>
+```
+mkdir -p /etc/nginx/secretchamber
+htpasswd -c /etc/nginx/secretchamber/htpasswd jarkom
 
-  `Put your configuration in here`
+# inputkan password modul3
+# ini di client
+nginx -t
 
-- Explanation
-
-  `Put your explanation in here`
+service nginx restart
+```
+Jalankan di Client
+```
+# lynx ke salah satu PHP worker
+lynx gryffindor.hogwarts.d31.com
+# masukan username dan password
+```
+- Explanation<br>
+Untuk membatasi akses ke Gryffindor melalui Voldemort, konfigurasi ini menerapkan autentikasi dengan menggunakan username “jarkom” dan password “modul3.” File autentikasi disimpan di /etc/nginx/secretchamber/htpasswd. Di sisi PHP worker, konfigurasi dalam /etc/nginx/sites-available/default menggunakan auth_basic untuk mengaktifkan autentikasi dasar, yang mengharuskan pengguna memasukkan kredensial sebelum dapat mengakses. Setelah semua pengaturan dilakukan, Nginx perlu direstart agar perubahan pada pengaturan autentikasi dapat diterapkan.
 
 <br>
 
