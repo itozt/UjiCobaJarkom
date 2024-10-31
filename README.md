@@ -1010,7 +1010,7 @@ Untuk membatasi akses ke Gryffindor melalui Voldemort, konfigurasi ini menerapka
 ![NOMOR 10-4](https://github.com/user-attachments/assets/1380a32c-0085-41cd-9b9c-bd47ac9cb57a)<br>
 2 Worker
 ![NOMOR 10-1](https://github.com/user-attachments/assets/0fd88ac4-a300-4a43-9fe4-8a44054db78e)
-![NOMOR 10-6](https://github.com/user-attachments/assets/c2ce30c8-ac39-450b-a453-edacbb4d1fa2)
+![NOMOR 10-6](https://github.com/user-attachments/assets/c2ce30c8-ac39-450b-a453-edacbb4d1fa2)<br>
 3 Worker
 ![NOMOR 10-2](https://github.com/user-attachments/assets/98cc4ae2-d2c6-4923-ac62-9861a70d1510)
 ![NOMOR 10-5](https://github.com/user-attachments/assets/8bdb3630-bf6e-4d5f-b8d3-38cc5230e2b3)
@@ -1123,21 +1123,61 @@ Kolaborasi antara Hogwarts dan ITS memungkinkan setiap permintaan yang diarahkan
 > Selain butuh autentikasi dalam pengaksesan asrama Gryffindor melalui LB Voldemort, juga perlu dibatasi dengan pembatasan IP.  LB Voldemort hanya boleh diakses oleh client dengan IP [Prefix IP].2.64, [Prefix IP].2.100, [Prefix IP].5.50, dan [Prefix IP].5.155. hint: (fixed in dulu clientnya) 
 
 
-> _In addition to requiring authentication for access to Gryffindor through Voldemort’s load balancer, IP restrictions also need to be enforced. Voldemort's load balancer can only be accessed by clients with IPs: [Prefix IP].2.64, [Prefix IP].2.100, [Prefix IP].5.50, and [Prefix IP].5.155. (hint: fixed client IPs first)._
-
 **Answer:**
 
-- Screenshot
+- Screenshot<br>
+  HannahAbbott dengan IP `10.130.5.50` diberikan ijin oleh Voldemort<br>
+![NOMOR 12-1](https://github.com/user-attachments/assets/143846bc-e94c-4bc5-96b6-b5c8003804f8)
+![NOMOR 12-2](https://github.com/user-attachments/assets/bde37bf2-f999-4303-bf35-56f1d3b83710)<br>
+  DracoMalfoy dengan IP `10.130.5.65` tidak diberikan ijin oleh Voldemort<br>
+  ![NOMOR 12-3](https://github.com/user-attachments/assets/3b282468-a113-4629-bfa6-ec0446cdbe90)
+![NOMOR 12-4](https://github.com/user-attachments/assets/e21f0c04-2f4a-4518-ac0f-23d602fe842a)
 
-  `Put your screenshot in here`
 
-- Configuration
+- Configuration <br>
+**Load Balancer :** <br>
+```
+echo '
+upstream backend {
+    server 10.130.1.1;
+    server 10.130.1.2;
+    server 10.130.1.3;
+}
 
-  `Put your configuration in here`
+server {
+    listen 80;
+    server_name gryffindor.hogwarts.d31.com www.gryffindor.hogwarts.d31.com;
 
-- Explanation
+    location / {
+        allow 10.130.2.64;
+        allow 10.130.2.100;
+        allow 10.130.5.50;
+        allow 10.130.5.155;
+        deny all; 
 
-  `Put your explanation in here`
+        proxy_pass http://backend;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+    }
+
+    auth_basic "Restricted Content";
+    auth_basic_user_file /etc/nginx/secretchamber/htpasswd;
+
+    error_log /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+}
+' >/etc/nginx/sites-available/libray_php
+
+service nginx restart
+```
+**Client :** <br>
+```
+lynx gryffindor.hogwarts.d31.com
+```
+
+- Explanation <br>
+Konfigurasi Nginx disusun untuk mengizinkan akses ke Voldemort hanya dari alamat IP 10.130.2.64, 10.130.2.100, 10.130.5.50, dan 10.130.5.155. Di dalam blok location /, perintah allow digunakan untuk memberikan izin akses kepada IP-IP tersebut, sementara perintah deny all membatasi akses dari alamat IP lainnya.
 
 <br>
 
@@ -1145,21 +1185,64 @@ Kolaborasi antara Hogwarts dan ITS memungkinkan setiap permintaan yang diarahkan
 
 > Pengaturan database yang dibutuhkan dalam perlombaan ini wajib diatur di Hagrid. Pastikan pengaturan database tersebut dapat diakses oleh Lunalovegood, FiliusFlitwick, dan ChoChang dengan menggunakan username: kelompokyyy dan password: passwordyyy 
 
-> _Database setup for this competition is managed by Hagrid. Ensure that this database can be accessed by LunaLovegood, FiliusFlitwick, and ChoChang using the username: "kelompokyyy" and password: "passwordyyy”_
 
 **Answer:**
 
-- Screenshot
+- Screenshot<br>
+  **Database Server (Hagrid):** <br>
+![NOMOR 13-1](https://github.com/user-attachments/assets/b1d7dd31-156c-4797-a11f-4e0ada58993b)
+  **Laravel Worker :** <br>
+![NOMOR 13-2](https://github.com/user-attachments/assets/8a69f5f5-5de0-4c11-902c-fb46813aae50)
 
-  `Put your screenshot in here`
+- Configuration <br>
+Pastikan untuk melakukan instalasi konfigurasi di Database Server terlebih dahulu. Selanjutnya, jangan lupa untuk mengganti [bind-address] pada file /etc/mysql/mariadb.conf.d/50-server.cnf menjadi 0.0.0.0. Setelah itu, ingat untuk merestart MySQL agar perubahan dapat diterapkan.<br>
+  **Database Server (Hagrid):** <br>
+```
+echo '# This group is read both by the client and the server
+# use it for options that affect everything
+[client-server]
 
-- Configuration
+# Import all .cnf files from configuration directory
+!includedir /etc/mysql/conf.d/
+!includedir /etc/mysql/mariadb.conf.d/
 
-  `Put your configuration in here`
+# Options affecting the MySQL server (mysqld)
+[mysqld]
+skip-networking=0
+skip-bind-address
+' > /etc/mysql/my.cnf
+```
+```
+nano /etc/mysql/mariadb.conf.d/50-server.cnf
 
-- Explanation
+# Scroll, lalu ganti
+bind-address            = 0.0.0.0
 
-  `Put your explanation in here`
+service mysql start
+```
+```
+mysql -u root -p
+# Enter password: 
+
+CREATE USER 'kelompokd31'@'%' IDENTIFIED BY 'passwordd31';
+CREATE USER 'kelompokd31'@'localhost' IDENTIFIED BY 'passwordd31';
+CREATE DATABASE dbkelompokd31;
+GRANT ALL PRIVILEGES ON *.* TO 'kelompokd31'@'%';
+GRANT ALL PRIVILEGES ON *.* TO 'kelompokd31'@'localhost';
+FLUSH PRIVILEGES;
+
+exit
+
+service mysql restart
+```
+Untuk mengakses database, gunakan Laravel Worker dan pastikan untuk selalu memeriksa nameserver DNS.
+**Laravel Worker :** <br>
+```
+mariadb --host=10.130.4.1 --port=3306 --user=kelompokd31 --password=passwordd31 dbkelompokd31 -e "SHOW DATABASES;"
+```
+
+- Explanation <br>
+Pengaturan database untuk perlombaan ini dilakukan di server Hagrid, memungkinkan Lunalovegood, Filius Flitwick, dan Cho Chang untuk mengaksesnya dengan menggunakan username "kelompokd31" dan password "passwordd31." Pertama, konfigurasi MySQL diubah dengan mengatur bind-address di file 50-server.cnf menjadi 0.0.0.0, yang memungkinkan akses dari semua alamat IP, lalu MySQL di-restart. Selanjutnya, pengguna baru bernama kelompokd31 dibuat dengan hak akses penuh ke database dbkelompokd31, dan hak akses ini diterapkan menggunakan perintah SQL. Setelah semua konfigurasi selesai, pengguna dapat mengakses database melalui Laravel Worker dengan perintah yang sesuai.
 
 <br>
 
