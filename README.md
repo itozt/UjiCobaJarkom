@@ -1477,9 +1477,8 @@ Untuk memastikan Lunalovegood, Filius Flitwick, dan Cho Chang memiliki website y
     cat historyLogin.txt
     ```
 
-- Explanation
-
-  `Put your explanation in here`
+- Explanation <br>
+  Pengujian dilakukan pada endpoint `/login` di salah satu server worker menggunakan Apache Benchmark dari klien SusanBones. Sebanyak 100 permintaan dikirim dengan kecepatan 10 permintaan per detik, menggunakan file `login.json` yang berisi data login untuk proses otentikasi. Hasil pengujian mencakup respons token yang diperoleh, yang disimpan dalam file `historyLogin.txt` sebagai referensi untuk analisis lebih lanjut.
 
 <br>
 
@@ -1558,9 +1557,8 @@ Untuk memastikan Lunalovegood, Filius Flitwick, dan Cho Chang memiliki website y
   ab -n 100 -c 10 -p login.json -T application/json http://www.gryffindor.hogwarts.d31.com/api/auth/login
   ```
 
-- Explanation
-
-  `Put your explanation in here`
+- Explanation <br>
+  Dengan menggunakan konfigurasi Proxy Bind, setiap worker dihubungkan ke load balancer melalui IP masing-masing, memungkinkan distribusi permintaan pengguna secara merata ke setiap worker. Konfigurasi ini dimulai dengan menambahkan blok worker dalam file Nginx untuk mendefinisikan ketiga worker beserta IP dan port mereka. Selanjutnya, blok server ditambahkan untuk mengarahkan `proxy_pass` ke grup worker yang telah disiapkan, sehingga semua permintaan ke domain `gryffindor.hogwarts.d31.com` dialihkan melalui load balancer. Setelah konfigurasi selesai, pengujian load balancer dilakukan menggunakan Apache Benchmark dari sisi klien guna memastikan bahwa distribusi beban berjalan optimal.
 
 <br>
 
@@ -1582,11 +1580,83 @@ sebanyak tiga percobaan dan lakukan analisis testing menggunakan apache benchmar
 
 - Configuration
   Karena diminta 3 percobaan, maka ada 3 script berbeda. <br>
-  - Script 1
+  - _Script 1_
+  ```
+  echo '[www]
+  user = www-data
+  group = www-data
+  listen = /run/php/php8.0-fpm.sock
+  listen.owner = www-data
+  listen.group = www-data
+  php_admin_value[disable_functions] = exec,passthru,shell_exec,system
+  php_admin_flag[allow_url_fopen] = off
 
-- Explanation
+  ; Choose how the process manager will control the number of child processes.
 
-  `Put your explanation in here`
+  pm = dynamic
+  pm.max_children = 5
+  pm.start_servers = 2
+  pm.min_spare_servers = 1
+  pm.max_spare_servers = 3' > /etc/php/8.0/fpm/pool.d/www.conf
+
+  service php8.0-fpm restart
+  ```
+  **Client :** <br>
+  ```
+  ab -n 100 -c 10 -p login.json -T application/json http://www.gryffindor.hogwarts.d31.com/api/auth/login
+  ```
+  - _Script 2_
+  ```
+  echo '[www]
+  user = www-data
+  group = www-data
+  listen = /run/php/php8.0-fpm.sock
+  listen.owner = www-data
+  listen.group = www-data
+  php_admin_value[disable_functions] = exec,passthru,shell_exec,system
+  php_admin_flag[allow_url_fopen] = off
+
+  ; Choose how the process manager will control the number of child processes.
+
+  pm = dynamic
+  pm.max_children = 25
+  pm.start_servers = 5
+  pm.min_spare_servers = 3
+  pm.max_spare_servers = 10' > /etc/php/8.0/fpm/pool.d/www.conf
+
+  service php8.0-fpm restart
+  ```
+  **Client :** <br>
+  ```
+  ab -n 100 -c 10 -p login.json -T application/json http://www.gryffindor.hogwarts.d31.com/api/auth/login
+  ```
+  - _Script 3_
+  ```
+  echo '[www]
+  user = www-data
+  group = www-data
+  listen = /run/php/php8.0-fpm.sock
+  listen.owner = www-data
+  listen.group = www-data
+  php_admin_value[disable_functions] = exec,passthru,shell_exec,system
+  php_admin_flag[allow_url_fopen] = off
+
+  ; Choose how the process manager will control the number of child processes.
+
+  pm = dynamic
+  pm.max_children = 50
+  pm.start_servers = 8
+  pm.min_spare_servers = 5
+  pm.max_spare_servers = 15' > /etc/php/8.0/fpm/pool.d/www.conf
+
+  service php8.0-fpm restart
+  ```
+  **Client :** <br>
+  ```
+  ab -n 100 -c 10 -p login.json -T application/json http://www.gryffindor.hogwarts.d31.com/api/auth/login
+  ```
+- Explanation <br>
+  Untuk meningkatkan kinerja server Laravel, PHP-FPM diimplementasikan pada server LunaLovegood, FiliusFlitwick, dan ChoChang. Dalam uji kinerja ini, parameter seperti `pm.max_children`, `pm.start_servers`, `pm.min_spare_servers`, dan `pm.max_spare_servers` disesuaikan dalam tiga skenario berbeda. Setiap skenario dilakukan dengan mengubah nilai parameter tersebut untuk mengamati pengaruhnya terhadap respons sistem. Setelahnya, Apache Benchmark digunakan untuk mengukur performa dengan mengirimkan 100 permintaan pada kecepatan 10 permintaan per detik. Hasil pengujian ini memberikan wawasan mengenai kemampuan sistem dalam menangani beban dan membantu menentukan konfigurasi yang paling efisien untuk kebutuhan saat ini.
 
 <br>
 
@@ -1594,24 +1664,70 @@ sebanyak tiga percobaan dan lakukan analisis testing menggunakan apache benchmar
 
 > Yey terakhir. Menurut Professor Dumbledore, sepertinya menggunakan PHP-FPM tidak cukup untuk meningkatkan performa worker-worker. Implementasikan Least-Conn pada Dementor. Lakukan analisis pada testing kinerja menggunakan apache benchmark sebanyak 100 request dengan 10 request/second atau menggunakan jmeter dengan 100 threads! (Pilih 1 metode testing)
 
-> _Finally, Professor Dumbledore suggests that PHP-FPM might not be enough to improve the workers' performance. Implement the Least-Conn algorithm on Dementor. Analyze the performance by using Apache Benchmark with 100 requests at a rate of 10 requests per second or using JMeter with 100 threads! (Choose 1 testing method)_
-
 **Answer:**
 
 - Screenshot
-
-  `Put your screenshot in here`
-
+  ![NOMOR 20](https://github.com/user-attachments/assets/312a7163-c27d-4de0-9edf-056694a24f34)
+  ![NOMOR 20-2](https://github.com/user-attachments/assets/d9569dc0-b195-4f68-b30c-cbac7c8187b7)
 - Configuration
+  **Laravel Worker :** <br>
+  ```
+  echo '[www]
+  user = www-data
+  group = www-data
+  listen = /run/php/php8.0-fpm.sock
+  listen.owner = www-data
+  listen.group = www-data
+  php_admin_value[disable_functions] = exec,passthru,shell_exec,system
+  php_admin_flag[allow_url_fopen] = off
 
-  `Put your configuration in here`
+  ; Choose how the process manager will control the number of child processes.
 
-- Explanation
+  pm = dynamic
+  pm.max_children = 100
+  pm.start_servers = 20
+  pm.min_spare_servers = 15
+  pm.max_spare_servers = 30' > /etc/php/8.0/fpm/pool.d/www.conf
+  ```
+  **Load Balancer :** <br>
+  ```
+  echo '
+  upstream worker {
+    server 10.130.6.1:8004;
+    server 10.130.6.2:8005;
+    server 10.130.6.3:8006;
+  }
 
-  `Put your explanation in here`
+  server {
+    listen 80;
+    server_name gryffindor.hogwarts.d31.com www.gryffindor.hogwarts.d31.com;
+
+    location / {
+        proxy_pass http://worker;
+    }
+    error_log /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+  } 
+  ' > /etc/nginx/sites-available/laravel-worker
+
+  ln -s /etc/nginx/sites-available/laravel-worker /etc/nginx/sites-enabled/laravel-worker
+
+  service nginx restart
+  ```
+  **Client :** <br>
+  ```
+  ab -n 100 -c 10 http://www.gryffindor.hogwarts.d31.com/index.php
+  ```
+ 
+- Explanation <br>
+  Untuk meningkatkan performa server Laravel, Dumbledore merekomendasikan penerapan algoritma Least-Connections pada load balancer bernama Dementor. Konfigurasi ini dilakukan dengan menyesuaikan parameter PHP-FPM pada server worker Laravel, termasuk meningkatkan nilai `pm.max_children`, `pm.start_servers`, `pm.min_spare_servers`, dan `pm.max_spare_servers` untuk memungkinkan lebih banyak koneksi simultan. Setelah penyesuaian server, kinerja diuji menggunakan Apache Benchmark, yang mengirimkan 100 permintaan dengan laju 10 permintaan per detik. Pengujian ini bertujuan untuk mengevaluasi efektivitas algoritma Least-Connections dalam mengelola beban serta menilai apakah perubahan ini berhasil meningkatkan responsivitas dan stabilitas sistem secara signifikan.
 
 <br>
   
 ## Problems
+- nameserver sering hilang sehingga beberapa kali failed/error/
+- Jmeter cukup lama prosesnya di bagian unzip, zip, download, dan lainnya.
+- Soal praktikum dan materi terlalu banyak sehingga sedikit sulit menjalani saat praktikum. Namun tetap berusaha sampai bisa. :sunglasses: :sunglasses: :sunglasses:
 
 ## Revisions (if any)
+- Revisi nomer 6 -20
