@@ -1473,7 +1473,7 @@ Untuk memastikan Lunalovegood, Filius Flitwick, dan Cho Chang memiliki website y
     ```
   - Memasukkan history login untuk mengakses token
     ```
-    curl -X POST -H "Content-Type: application/json" -d @login.json http://10.6.6.2:8003/api/auth/login > historyLogin.txt
+    curl -X POST -H "Content-Type: application/json" -d @login.json http://10.130.6.2:8003/api/auth/login > historyLogin.txt
     cat historyLogin.txt
     ```
 
