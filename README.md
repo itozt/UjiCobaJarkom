@@ -1725,7 +1725,7 @@ sebanyak tiga percobaan dan lakukan analisis testing menggunakan apache benchmar
 <br>
   
 ## Problems
-- nameserver sering hilang sehingga beberapa kali failed/error/
+- nameserver sering hilang sehingga beberapa kali failed/error
 - Jmeter cukup lama prosesnya di bagian unzip, zip, download, dan lainnya.
 - Soal praktikum dan materi terlalu banyak sehingga sedikit sulit menjalani saat praktikum. Namun tetap berusaha sampai bisa. :sunglasses: :sunglasses: :sunglasses:
 
