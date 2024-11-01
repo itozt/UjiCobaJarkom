@@ -1417,21 +1417,32 @@ Untuk memastikan Lunalovegood, Filius Flitwick, dan Cho Chang memiliki website y
 
 > Lakukan testing endpoint /register sebanyak 100 request dengan 10 request/second di salah satu worker menggunakan apache benchmark dari SusanBones! Kenapa failed 99x? Jelaskan! 
 
-> _Test the /register endpoint with 100 requests and 10 requests per second on one of the workers using Apache Benchmark from SusanBones! Why did 99 tests fail? Explain!_
-
 **Answer:**
 
 - Screenshot
+  ![NOMOR 15-1](https://github.com/user-attachments/assets/26a647ef-4bec-49cb-a96b-3613a7ea1c98)
+  ![NOMOR 15-2](https://github.com/user-attachments/assets/b87e2905-a683-49d1-9e6e-653b34e2f756)
 
-  `Put your screenshot in here`
 
-- Configuration
+- Configuration <br>
+  Untuk memungkinkan monitoring langsung menggunakan Apache Benchmark, username dan password dapat dimasukkan ke dalam file .json. Ini memungkinkan akses otomatis terhadap data autentikasi selama pengujian.<br>
+  **Client :** <br>
+  ```
+  apt-get install apache2-utils -y
 
-  `Put your configuration in here`
-
-- Explanation
-
-  `Put your explanation in here`
+  echo '
+  {
+    "username": "kelompokd31",
+    "password": "passwordd31"
+  }' > register.json
+  ```
+  Mengakses dengan apache Benchmark<br>
+  ```
+  ab -n 100 -c 10 -p register.json -T application/json http://10.130.6.2:8003/api/auth/register
+  ```
+  
+- Explanation <br>
+  Ketika menguji endpoint `/register` dengan 100 permintaan menggunakan Apache Benchmark, hanya satu permintaan yang berhasil sementara 99 lainnya gagal. Penyebabnya bisa beragam, seperti batasan jumlah permintaan yang mampu ditangani server secara bersamaan, pengaturan konfigurasi yang belum optimal, format permintaan yang mungkin salah, atau autentikasi yang tidak dikonfigurasi dengan benar. Menganalisis log server dan memeriksa pengaturan aplikasi lebih lanjut akan membantu mengidentifikasi alasan pasti dari kegagalan ini.
 
 <br>
 
@@ -1439,17 +1450,32 @@ Untuk memastikan Lunalovegood, Filius Flitwick, dan Cho Chang memiliki website y
 
 > Lakukan juga testing pada endpoint /login sebanyak 100 request dengan 10 request/second di salah satu worker menggunakan apache benchmark dari SusanBones! Dapatkan token melalui responsenya juga!
 
-> _Test the /login endpoint with 100 requests and 10 requests per second on one of the workers using Apache Benchmark from SusanBones! Collect the token from the response!_
-
 **Answer:**
 
 - Screenshot
+![NOMOR 16-1](https://github.com/user-attachments/assets/d98d6649-090a-4567-814a-72278172c350)
+![NOMOR 16-2](https://github.com/user-attachments/assets/1821b221-d23a-405c-8d8a-41068b8f604a)
+![NOMOR 16-3](https://github.com/user-attachments/assets/f5eeaabc-77a7-4858-886c-fa0fb9606692)
 
-  `Put your screenshot in here`
-
-- Configuration
-
-  `Put your configuration in here`
+- Configuration <br>
+  **Client :**  <br>
+  - Menambahkan username dan password ke dalam file .json memungkinkan monitoring langsung dengan Apache Benchmark.
+    ```
+    echo '
+    {
+       "username": "kelompokd31",
+       "password": "passwordd31"
+    }' > login.json
+    ```
+  - Mengakses dengan apache Benchmark
+    ```
+    ab -n 100 -c 10 -p login.json -T application/json http://10.130.6.2:8003/api/auth/login
+    ```
+  - Memasukkan history login untuk mengakses token
+    ```
+    curl -X POST -H "Content-Type: application/json" -d @login.json http://10.6.6.2:8003/api/auth/login > historyLogin.txt
+    cat historyLogin.txt
+    ```
 
 - Explanation
 
@@ -1461,21 +1487,30 @@ Untuk memastikan Lunalovegood, Filius Flitwick, dan Cho Chang memiliki website y
 
 > Coba testing pada endpont /me sebanyak 100 request dengan 10 request/second di salah satu worker menggunakan apache benchmark dari SusanBones! Periksa responsenya apakah sudah sesuai dengan yang diloginkan? 
 
-> _Test the /me endpoint with 100 requests and 10 requests per second on one of the workers using Apache Benchmark from SusanBones! Check if the response matches the logged-in user!_
-
 **Answer:**
 
 - Screenshot
+  ![NOMOR 17-1](https://github.com/user-attachments/assets/7866d6f3-5451-44d8-a42b-4ac2aa94e9d8)
+  ![NOMOR 17-2](https://github.com/user-attachments/assets/6da59602-d6a2-44c9-984a-c6f9d07a69dd)
+  ![NOMOR 17-3](https://github.com/user-attachments/assets/03d54ede-3976-445a-8431-215bbbdafbe4)
 
-  `Put your screenshot in here`
+- Configuration <br>
+  **Client :** <br>
+  ```
+  echo "nameserver 8.8.8.8" > /etc/resolv.conf
+  apt-get install jq -y
+ 
+  token=$(cat historyLogin.txt | jq -r '.token')
 
-- Configuration
-
-  `Put your configuration in here`
-
-- Explanation
-
-  `Put your explanation in here`
+  ab -n 100 -c 10 -p login.json -T application/json http://10.130.6.2:8003/api/me
+  ```
+  **Load Balancer :** <br>
+  ```
+  cat /var/log/nginx/access.log
+  ```
+  
+- Explanation <br>
+  Untuk menguji endpoint /me dengan 100 permintaan menggunakan Apache Benchmark, sistem dikonfigurasi untuk mengirim 10 permintaan per detik. Respons server kemudian diperiksa untuk memastikan data pengguna yang sedang login sesuai. Token autentikasi diambil dari file historyLogin.txt dan digunakan dalam setiap permintaan. Jika respons menunjukkan detail pengguna yang benar, sistem berfungsi dengan baik. Namun, respons yang tidak sesuai bisa menunjukkan masalah autentikasi atau penanganan permintaan di backend.
 
 <br>
 
@@ -1483,17 +1518,45 @@ Untuk memastikan Lunalovegood, Filius Flitwick, dan Cho Chang memiliki website y
 
 > Mendekati tugas akhir perlombaan ini, mari seimbangkan kekuatan LunaLovegood, FiliusFlitwick, dan ChoChang untuk bekerja sama secara adil! Buatkan load balancer Laravel dengan Dementor dan implementasikan Proxy Bind untuk mengaitkan IP dari ketiga worker tersebut!
 
-> _As the competition nears its end, balance the workload of LunaLovegood, FiliusFlitwick, and ChoChang! Create a Laravel load balancer using Dementor and implement Proxy Bind to link the IPs of the three workers!_
-
 **Answer:**
 
 - Screenshot
+  ![NOMOR 18-1](https://github.com/user-attachments/assets/809ce96a-0be0-4a66-8a08-9d5373b03e11)
+  ![NOMOR 18-2](https://github.com/user-attachments/assets/31fde9e6-1fa9-40ec-b7d9-8a91f526de04)
 
-  `Put your screenshot in here`
+- Configuration <br>
+  **Load Balancer :** <br>
+  Setup Server
+  ```
+  echo '
+  worker {
+    server 10.130.6.1:8004;
+    server 10.130.6.2:8005;
+    server 10.130.6.3:8006;
+  }
 
-- Configuration
+  server {
+    listen 80;
+    server_name gryffindor.hogwarts.d31.com www.gryffindor.hogwarts.d31.com;
 
-  `Put your configuration in here`
+    location / {
+        proxy_pass http://worker;
+    }
+    error_log /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+  } 
+  ' > /etc/nginx/sites-available/laravel-worker
+
+  ln -s /etc/nginx/sites-available/laravel-worker /etc/nginx/sites-enabled/laravel-worker
+
+  service nginx restart
+
+  htop
+  ```
+  **Client :** <br>
+  ```
+  ab -n 100 -c 10 -p login.json -T application/json http://www.gryffindor.hogwarts.d31.com/api/auth/login
+  ```
 
 - Explanation
 
@@ -1510,17 +1573,16 @@ pm.min_spare_servers
 pm.max_spare_servers
 sebanyak tiga percobaan dan lakukan analisis testing menggunakan apache benchmark sebanyak 100 request dengan 10 request/second atau menggunakan jmeter dengan 100 threads! (Pilih 1 metode testing)
 
-> _To strengthen the Laravel workers, implement PHP-FPM on LunaLovegood, FiliusFlitwick, and ChoChang. For performance testing, adjust: pm.max_children, pm.start_servers, pm.min_spare_servers, pm.max_spare_servers. Run the tests three times and analyze the performance by using Apache Benchmark with 100 requests at a rate of 10 requests per second or using JMeter with 100 threads! (Choose 1 testing method)_
-
 **Answer:**
 
 - Screenshot
-
-  `Put your screenshot in here`
+  ![NOMOR 19-1](https://github.com/user-attachments/assets/c474d33c-9cfe-493c-9110-a4fed01f9ef7)
+  ![NOMOR 19-2](https://github.com/user-attachments/assets/31145d9d-860a-4427-a58d-c88779bb6fc8)
+  ![NOMOR 19-3](https://github.com/user-attachments/assets/ece02216-1949-4432-84bc-5c7b9c06fee6)
 
 - Configuration
-
-  `Put your configuration in here`
+  Karena diminta 3 percobaan, maka ada 3 script berbeda. <br>
+  - Script 1
 
 - Explanation
 
